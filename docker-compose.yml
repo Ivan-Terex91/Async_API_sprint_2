@@ -1,0 +1,92 @@
+version: '3.5'
+
+services:
+  api:
+    container_name: ymp_api
+    image: ymp_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS_DSN: ${REDIS_DSN}
+      ELASTIC_DSN: ${ELASTIC_DSN}
+    networks:
+      - ymp_network
+    volumes:
+      - ./:/api
+    command: [
+        'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000', '--reload',
+    ]
+    depends_on:
+      - elastic
+      - redis
+
+  etl:
+    container_name: ymp_etl
+    image: ymp_etl
+    build:
+      context: .
+      dockerfile: ${PWD}/Dockerfile-etl
+    environment:
+      POSTGRES_DSN: ${POSTGRES_DSN}
+      ELASTIC_DSN: ${ELASTIC_DSN}
+    networks:
+      - ymp_network
+    volumes:
+      - ./etl:/etl
+    depends_on:
+      - postgres
+      - elastic
+
+  postgres:
+    container_name: ymp_postgres
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./dumps:/dumps
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - ymp_network
+
+  redis:
+    container_name: ymp_redis
+    image: redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - ymp_network
+
+  elastic:
+    container_name: ymp_elastic
+    image: elasticsearch:7.12.0
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    networks:
+      - ymp_network
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+
+  nginx:
+    container_name: ymp_nginx
+    image: nginx:alpine
+    volumes:
+      - ./etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./etc/nginx/conf.d:/etc/nginx/conf.d:ro
+    networks:
+      - ymp_network
+    depends_on:
+      - api
+
+volumes:
+  pg_data:
+  redis_data:
+  elastic_data:
+
+networks:
+  ymp_network:
+    name: ymp_network
