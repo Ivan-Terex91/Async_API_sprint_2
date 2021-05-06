@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from functools import partial
 
 import aiohttp
 import pytest
@@ -8,6 +9,7 @@ from elasticsearch import AsyncElasticsearch
 from multidict import CIMultiDictProxy
 
 SERVICE_URL = "http://127.0.0.1:8000"
+GENRE_PREFIX = "/api/v1/genre"
 
 
 @dataclass
@@ -45,8 +47,8 @@ async def session():
     await session.close()
 
 
-@pytest.fixture(scope="function")
-async def make_get_request(session):
+@pytest.fixture
+def make_get_request(session):
     async def inner(prefix: str, method: str, params: dict = None) -> HTTPResponse:
         params = params or {}
         url = "".join((SERVICE_URL, prefix, method))
@@ -58,3 +60,8 @@ async def make_get_request(session):
             )
 
     return inner
+
+
+@pytest.fixture(scope="function")
+async def make_genre_request(make_get_request):
+    return partial(make_get_request, prefix=GENRE_PREFIX)
