@@ -90,5 +90,6 @@ local_settings.py
 .pytest_cache/
 
 .env
+.local.env
 db.sqlite3
 docker-compose.override.yml

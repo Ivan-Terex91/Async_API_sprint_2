@@ -1,0 +1,6 @@
+aioredis
+elasticsearch[async]
+pytest
+pytest-asyncio
+aiohttp
+pydantic[dotenv]

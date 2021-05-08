@@ -1,0 +1,66 @@
+version: '3.5'
+
+services:
+  tests:
+    container_name: ymp_tests
+    image: ymp_tests
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-0}
+        GROUP_ID: ${GROUP_ID:-0}
+    environment:
+      API_URL: ${API_URL}
+      REDIS_DSN: ${REDIS_DSN}
+      ELASTIC_DSN: ${ELASTIC_DSN}
+    networks:
+      - ymp_tests_network
+    volumes:
+      - ./:/tests
+    depends_on:
+      - api
+      - elastic
+      - redis
+
+  api:
+    container_name: ymp_tests_api
+    image: ymp_api
+    build:
+      context: ${PWD}/../../
+      dockerfile: ${PWD}/../../Dockerfile
+    environment:
+      REDIS_DSN: ${REDIS_DSN}
+      ELASTIC_DSN: ${ELASTIC_DSN}
+    networks:
+      - ymp_tests_network
+    ports:
+      - 127.0.0.1:8000:8000
+    volumes:
+      - ${PWD}/../../:/api
+    depends_on:
+      - elastic
+      - redis
+
+  redis:
+    container_name: ymp_tests_redis
+    image: redis
+    networks:
+      - ymp_tests_network
+    ports:
+      - 127.0.0.1:6379:6379
+
+  elastic:
+    container_name: ymp_tests_elastic
+    image: elasticsearch:7.12.0
+    environment:
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    networks:
+      - ymp_tests_network
+    ports:
+      - 127.0.0.1:9200:9200
+
+networks:
+  ymp_tests_network:
+    name: ymp_tests_network

@@ -9,4 +9,4 @@ RUN pip install -r /api/requirements/prod.txt --no-cache-dir
 
 COPY . /api
 
-CMD ["sleep", "infinity"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
