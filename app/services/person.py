@@ -38,6 +38,8 @@ class PersonService:
         """Метод получения списка фильмов в которых принимала участие персона."""
 
         person = await self._get_person_from_elastic(person_id)
+        if not person:
+            return []
         films = await self.get_person_film_data(person, source_param=["id", "title", "imdb_rating"])
         person_films = {}
         for role, film in films.items():
