@@ -2,3 +2,11 @@ version: '3.5'
 services:
   tests:
     command: ["sleep", "infinity"]
+
+  api:
+    ports:
+      - 127.0.0.1:8000:8000
+
+  elastic:
+    ports:
+      - 127.0.0.1:9200:9200

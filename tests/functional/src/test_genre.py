@@ -13,7 +13,7 @@ async def make_genre_request(make_get_request):
     return partial(make_get_request, prefix=GENRE_PREFIX)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 async def genre_data(es_client):
     genres = [
         {"id": "a4d63486-7447-46df-98cc-55735180941a", "name": "Action", "description": ""},
@@ -49,6 +49,8 @@ async def genre_data(es_client):
         body.append(json.dumps(genre))
 
     await es_client.bulk(index="genres", body=body, refresh="wait_for")
+    yield
+    await es_client.delete_by_query(index="genres", body={"query": {"match_all": {}}}, refresh=True)
 
 
 @pytest.mark.parametrize(

@@ -12,7 +12,7 @@ async def make_person_request(make_get_request):
     return partial(make_get_request, prefix=PERSON_PREFIX)
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 async def person_data(es_client):
     persons = [
         {"id": "facfb08d-8d9a-42f3-9e4e-697d8f9d6e4a", "full_name": "Harrison Ford"},
@@ -26,7 +26,11 @@ async def person_data(es_client):
         body.append(json.dumps({"create": {"_index": "persons", "_id": person["id"]}}))
         body.append(json.dumps(person))
 
-    await es_client.bulk(index="persons", body=body, refresh="wait_for")
+    await es_client.bulk(index="persons", body=body, refresh=True)
+    yield
+    await es_client.delete_by_query(
+        index="persons", body={"query": {"match_all": {}}}, refresh=True
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -74,7 +78,9 @@ async def film_data(es_client):
         body.append(json.dumps({"create": {"_index": "movies", "_id": film["id"]}}))
         body.append(json.dumps(film))
 
-    await es_client.bulk(index="movies", body=body, refresh="wait_for")
+    await es_client.bulk(index="movies", body=body, refresh=True)
+    yield
+    await es_client.delete_by_query(index="movies", body={"query": {"match_all": {}}}, refresh=True)
 
 
 @pytest.mark.parametrize(

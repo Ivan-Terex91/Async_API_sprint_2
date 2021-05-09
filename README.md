@@ -55,6 +55,22 @@ cd tests/functional
 pytest
 ```
 
+# Команда для дампа фикстур из elastic
+``` sh
+cat query.json
+{
+    "sort": [
+        {
+            "imdb_rating": {
+                "order": "desc"
+            }
+        }
+    ]
+}
+
+cat query.json | http get http://localhost:9200/movies/_search | jq '[.hits.hits[]._source]' > movies.json
+```
+
 
 # Проектная работа 5 спринта
 

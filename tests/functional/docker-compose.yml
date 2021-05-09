@@ -34,8 +34,6 @@ services:
       ELASTIC_DSN: ${ELASTIC_DSN}
     networks:
       - ymp_tests_network
-    ports:
-      - 127.0.0.1:8000:8000
     volumes:
       - ${PWD}/../../:/api
     depends_on:
@@ -58,8 +56,6 @@ services:
       ES_JAVA_OPTS: "-Xms512m -Xmx512m"
     networks:
       - ymp_tests_network
-    ports:
-      - 127.0.0.1:9200:9200
 
 networks:
   ymp_tests_network:
