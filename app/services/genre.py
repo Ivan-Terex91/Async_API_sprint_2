@@ -1,12 +1,10 @@
 from functools import lru_cache
 from typing import List, Optional
 
-from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
 from db.elastic import get_elastic
-from db.redis import get_redis
 from models.genre import Genre
 
 GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 5
@@ -15,8 +13,7 @@ GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 class GenreService:
     """Бизнесс логика получения жанров"""
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, elastic: AsyncElasticsearch):
         self.elastic = elastic
 
     async def get_by_id(self, genre_id: str) -> Optional[Genre]:
@@ -45,8 +42,5 @@ class GenreService:
 
 
 @lru_cache()
-def get_genre_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> GenreService:
-    return GenreService(redis, elastic)
+def get_genre_service(elastic: AsyncElasticsearch = Depends(get_elastic)) -> GenreService:
+    return GenreService(elastic)

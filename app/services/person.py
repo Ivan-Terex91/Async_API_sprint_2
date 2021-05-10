@@ -1,14 +1,12 @@
 from functools import lru_cache
 from typing import Dict, List, Optional, Tuple
 
-from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
 from core import json
 from db.elastic import get_elastic
-from db.redis import get_redis
-from models.person import Person, PersonFilm, RoleType
+from models.person import Person, RoleType
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
@@ -16,8 +14,7 @@ PERSON_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 class PersonService:
     """Бизнес логика получения персон."""
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, elastic: AsyncElasticsearch):
         self.elastic = elastic
 
     async def get_by_id(self, person_id: str) -> Optional[Tuple[Person, List[str], List[str]]]:
@@ -105,8 +102,5 @@ class PersonService:
 
 
 @lru_cache()
-def get_person_service(
-    redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
-) -> PersonService:
-    return PersonService(redis, elastic)
+def get_person_service(elastic: AsyncElasticsearch = Depends(get_elastic)) -> PersonService:
+    return PersonService(elastic)

@@ -169,3 +169,25 @@ async def test_genre_list_sort_desc(make_genre_request, sort_field: str):
         response.body[i][sort_field] > response.body[i + 1][sort_field]
         for i in range(len(response.body) - 1)
     )
+
+
+@pytest.mark.asyncio
+async def test_genre_list_cache(make_genre_request, redis_client):
+    expected_key = "/api/v1/genre/size=5&sort=name"
+    expected_body = [
+        {"id": "a4d63486-7447-46df-98cc-55735180941a", "name": "Action"},
+        {"id": "41062d8b-1f6d-4fc6-adf7-fc3412bafc47", "name": "Adventure"},
+        {"id": "f1b24268-81cd-49b5-8e6c-51ef463593d3", "name": "Animation"},
+        {"id": "9ad58da7-a676-4d1c-961f-f833703f2a5a", "name": "Biography"},
+        {"id": "beaefac6-caf8-4a40-9665-7e1a946775ee", "name": "Comedy"},
+    ]
+
+    assert await redis_client.get(expected_key) is None
+
+    response = await make_genre_request(method="/", params={"size": 5, "sort": "name"})
+    assert response.status == 200
+    assert response.body == expected_body
+
+    cached_response = await redis_client.get(expected_key)
+    assert cached_response is not None
+    assert json.loads(cached_response) == expected_body
