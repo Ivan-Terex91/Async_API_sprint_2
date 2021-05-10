@@ -29,7 +29,7 @@ class PersonService:
         for role, film in films.items():
             person_roles.append(role)
             film_ids.update({film_param["id"] for film_param in film})
-        return person, person_roles, list(film_ids)
+        return person, person_roles, sorted(list(film_ids))
 
     async def get_person_film_list(self, person_id: str) -> Optional[List[Dict]]:
         """Метод получения списка фильмов в которых принимала участие персона."""
@@ -79,7 +79,7 @@ class PersonService:
             path = f"{role}s"
             term = {f"{path}.id": person.id}
             query = await self.get_query(_source_param=source_param, path=path, term=term)
-            films = await self.elastic.search(index="movies", body=json.dumps(query))
+            films = await self.elastic.search(index="movies", body=json.dumps(query), sort="id")
             films = films["hits"]["hits"]
             if films:
                 person_films_data[role] = [film["_source"] for film in films]

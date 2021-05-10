@@ -1,6 +1,7 @@
 import json
 from functools import partial
 from pathlib import Path
+from typing import List
 
 import pytest
 
@@ -177,3 +178,100 @@ async def test_film_list(query_params, expected_body, make_film_request):
     assert response.status == 200
     assert response.headers["Content-Type"] == "application/json"
     assert response.body == expected_body
+
+
+@pytest.mark.parametrize(
+    "title, expected_status_code, expected_body",
+    [
+        (
+            "Star",
+            200,
+            [
+                {
+                    "id": "407585a5-1cb0-4d02-b4f6-522bac38d852",
+                    "title": "Kirby Super Star",
+                    "imdb_rating": 9.2,
+                },
+                {
+                    "id": "532aa198-cc1c-4469-af4d-e1bd899a6c2d",
+                    "title": "Lunar: The Silver Star",
+                    "imdb_rating": 9.2,
+                },
+                {
+                    "id": "dd3b5822-4ce8-4721-8c52-053828c88805",
+                    "title": "Star Control 2",
+                    "imdb_rating": 9.1,
+                },
+                {
+                    "id": "9c472cfa-7d31-4d6c-868f-274e8f40fa27",
+                    "title": "The Secret World of Jeffree Star",
+                    "imdb_rating": 9.5,
+                },
+                {
+                    "id": "b05e03d9-3e7e-4233-ba9b-f81e417fc4b3",
+                    "title": "Star Wars: Knights of the Old Republic",
+                    "imdb_rating": 9.6,
+                },
+                {
+                    "id": "4d469eef-1635-4f8d-9ec5-be85cc5c3c2d",
+                    "title": "Star Wars SC 38 Reimagined",
+                    "imdb_rating": 9.5,
+                },
+                {
+                    "id": "eab9d4f4-c5e3-4e7c-9dc5-701405205b40",
+                    "title": "Rifftrax: The Star Wars Holiday Special",
+                    "imdb_rating": 9.2,
+                },
+                {
+                    "id": "74e1324f-c444-43da-aefa-4ca4823bfd41",
+                    "title": "All-Star Party for Carol Burnett",
+                    "imdb_rating": 9.2,
+                },
+                {
+                    "id": "9e498b00-e3df-42be-b262-f3e708371dac",
+                    "title": "Double Digits: The Story of a Neighborhood Movie Star",
+                    "imdb_rating": 9.1,
+                },
+                {
+                    "id": "b7985b06-3f6f-4f95-8dbc-61a5efc8f02e",
+                    "title": "Ringo Rocket Star and His Song for Yuri Gagarin",
+                    "imdb_rating": 9.4,
+                },
+            ],
+        ),
+        ("Yandex-middle-Python", 200, []),
+    ],
+)
+@pytest.mark.asyncio
+async def test_search_film(
+    make_film_request, title: str, expected_status_code: int, expected_body: List
+):
+    """Тест поиска фильмов по названию"""
+    response = await make_film_request(method="/search/", params={"query": title})
+    assert response.status == expected_status_code
+    assert response.headers["Content-Type"] == "application/json"
+    assert response.body == expected_body
+
+
+@pytest.mark.parametrize("title, size", [("Star", size) for size in range(1, 9)])
+@pytest.mark.asyncio
+async def test_search_film_page_size(make_film_request, title: str, size: int):
+    """Тест размера ответа поиска фильмов"""
+    response = await make_film_request(method="/search/", params={"query": title, "size": size})
+    assert response.status == 200
+    assert len(response.body) == size
+
+
+@pytest.mark.parametrize(
+    "title, page, size",
+    [("Star", page, size) for page in range(2, 4) for size in range(1, 5)],
+)
+@pytest.mark.asyncio
+async def test_search_film_page_number(make_film_request, title: str, page: int, size: int):
+    """Тест номера страницы поиска фильмов"""
+    all_films_search = await make_film_request(method="/search/", params={"query": title})
+    response = await make_film_request(
+        method="/search/", params={"query": title, "size": size, "page": page}
+    )
+    assert response.status == 200
+    assert all_films_search.body[size * (page - 1) : (size * page)] == response.body
