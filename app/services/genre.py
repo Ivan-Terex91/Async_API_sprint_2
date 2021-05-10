@@ -1,46 +1,38 @@
 from functools import lru_cache
-from typing import List, Optional
+from typing import Iterable, Optional
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
-from db.elastic import get_elastic
+from db.base import AbstractDBStorage
+from db.elastic import get_genre_storage
 from models.genre import Genre
-
-GENRE_CACHE_EXPIRE_IN_SECONDS = 60 * 5
 
 
 class GenreService:
     """Бизнесс логика получения жанров"""
 
-    def __init__(self, elastic: AsyncElasticsearch):
-        self.elastic = elastic
+    def __init__(self, genre_storage: AbstractDBStorage):
+        self.genre_storage = genre_storage
 
     async def get_by_id(self, genre_id: str) -> Optional[Genre]:
         """Метод получения данных о жанре"""
-        genre = await self._get_genre_from_elastic(genre_id)
-        if not genre:
+        res = await self.genre_storage.get(id=genre_id)
+        if not res:
             return None
-        return genre
+        return Genre(**res)
 
     async def get_genres_list(
         self, page: int, size: int, sort_value: str, sort_order: str
-    ) -> List[Genre]:
+    ) -> Iterable[Genre]:
         """Метод получения данных о списке жанров из elastic"""
-        docs = await self.elastic.search(
-            index="genres", sort=f"{sort_value}:{sort_order}", from_=(page - 1) * size, size=size
+        res = await self.genre_storage.page(
+            order_map={sort_value: sort_order}, page=page, page_size=size
         )
-        return [Genre(**doc["_source"]) for doc in docs["hits"]["hits"]]
-
-    async def _get_genre_from_elastic(self, genre_id: str) -> Optional[Genre]:
-        """Метод получения данных о жанре из elastic."""
-        try:
-            doc = await self.elastic.get("genres", id=genre_id)
-        except NotFoundError:
-            return None
-        return Genre(**doc["_source"])
+        return (Genre(**g) for g in res)
 
 
 @lru_cache()
-def get_genre_service(elastic: AsyncElasticsearch = Depends(get_elastic)) -> GenreService:
-    return GenreService(elastic)
+def get_genre_service(
+    genre_storage: AbstractDBStorage = Depends(get_genre_storage),
+) -> GenreService:
+    return GenreService(genre_storage=genre_storage)

@@ -94,5 +94,5 @@ async def film_search(
     query: Optional[str] = "",
     film_service: FilmService = Depends(get_film_service),
 ) -> List[FilmListModel]:
-    films = await film_service.search_films(page=page, size=size, match_obj=query)
-    return [FilmListModel(**film["_source"]) for film in films]
+    films = await film_service.search(page=page, size=size, match_obj=query)
+    return [FilmListModel(**film) for film in films]
