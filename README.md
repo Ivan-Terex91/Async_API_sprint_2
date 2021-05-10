@@ -1,3 +1,28 @@
+[Функциональны тесты. Инф-ра](https://github.com/smdnv/Async_API_sprint_2/pull/10)
+1. Добавлено окружение для запуска тестов в докере и локально.
+2. Добавлены фикстуры настроек тестов, клиентов redis, elastic, http
+
+[Функциональны тесты. genre](https://github.com/smdnv/Async_API_sprint_2/pull/9)
+1. Добавлены тесты для api жанров
+
+[Функциональны тесты. film](https://github.com/smdnv/Async_API_sprint_2/pull/12)
+1. Добавлены тесты для api фильмов
+
+[Функциональны тесты. person](https://github.com/smdnv/Async_API_sprint_2/pull/11)
+1. Добавлены тесты для api персон
+
+[Функциональны тесты. search](https://github.com/smdnv/Async_API_sprint_2/pull/14)
+1. Добавлены тесты для api поиска
+
+[SOLID. Redis](https://github.com/smdnv/Async_API_sprint_2/pull/13)
+1. Добавлен абстрактный класс хранилища для кеширования
+2. Добавлена реализация хранилища с использованием редиса
+
+[SOLID. Elastic](https://github.com/smdnv/Async_API_sprint_2/pull/15)
+1. Добавлен абстрактный класс хранилища для общих данных
+2. Добавлена реализация хранилища с использованием еластика для моделей фильмов, жанров и персонажей
+
+
 # Запуск проекта
 1. Конфигурация маппинга портов для локального запуска
 ```
